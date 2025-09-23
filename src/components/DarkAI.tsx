@@ -21,7 +21,8 @@ import {
   Pause,
   RotateCcw,
   Eye,
-  Mail
+  Mail,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MediaViewer from "@/components/MediaViewer";
@@ -124,9 +125,9 @@ const DarkAI = () => {
   const [imgGenerationData, setImgGenerationData] = useState({
     prompt: "",
     model: "gemini",
-    size: "1024x1024",
     imageUrl: "",
-    editImageUrl: ""
+    editImageUrl: "",
+    multipleImageUrls: [] as string[]
   });
 
   const tabs = [
@@ -1330,52 +1331,122 @@ const DarkAI = () => {
                   />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="imgModel" className="text-foreground">AI Model</Label>
-                    <Select value={imgGenerationData.model} onValueChange={(value) => setImgGenerationData(prev => ({ ...prev, model: value }))}>
-                      <SelectTrigger className="bg-input border-border text-foreground">
-                        <SelectValue placeholder="Select model" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="gemini">Gemini Pro</SelectItem>
-                        <SelectItem value="gpt">GPT-5</SelectItem>
-                        <SelectItem value="flux-pro">Flux Pro</SelectItem>
-                        <SelectItem value="img-cv">High Quality (img-cv)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="imgSize" className="text-foreground">Image Size</Label>
-                    <Select value={imgGenerationData.size} onValueChange={(value) => setImgGenerationData(prev => ({ ...prev, size: value }))}>
-                      <SelectTrigger className="bg-input border-border text-foreground">
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="512x512">512x512</SelectItem>
-                        <SelectItem value="768x768">768x768</SelectItem>
-                        <SelectItem value="1024x1024">1024x1024 (Recommended)</SelectItem>
-                        <SelectItem value="1536x1024">1536x1024 (Landscape)</SelectItem>
-                        <SelectItem value="1024x1536">1024x1536 (Portrait)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div>
+                  <Label htmlFor="imgModel" className="text-foreground">AI Model</Label>
+                  <Select value={imgGenerationData.model} onValueChange={(value) => setImgGenerationData(prev => ({ ...prev, model: value, editImageUrl: "", multipleImageUrls: [] }))}>
+                    <SelectTrigger className="bg-input border-border text-foreground">
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gemini">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Gemini Pro</span>
+                          <span className="text-xs text-muted-foreground">Supports image editing</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="gpt">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">GPT-5</span>
+                          <span className="text-xs text-muted-foreground">Supports image editing</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="nano-banana">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Nano Banana</span>
+                          <span className="text-xs text-muted-foreground">Merge up to 10 images</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="flux-pro">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Flux Pro</span>
+                          <span className="text-xs text-muted-foreground">Text-to-image only</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="img-cv">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">High Quality (img-cv)</span>
+                          <span className="text-xs text-muted-foreground">Text-to-image only</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                {/* Image Upload for Editing */}
-                <div>
-                  <Label className="text-foreground">Edit Existing Image (Optional)</Label>
-                  <p className="text-sm text-muted-foreground mb-3">Upload an image to edit it based on your prompt, or leave empty to generate a new image.</p>
-                  <ImageUpload
-                    label="Upload Image to Edit"
-                    placeholder="Select an image to edit with AI"
-                    onUploadComplete={(url) => setImgGenerationData(prev => ({ ...prev, editImageUrl: url }))}
-                    currentUrl={imgGenerationData.editImageUrl}
-                    onUrlChange={(url) => setImgGenerationData(prev => ({ ...prev, editImageUrl: url }))}
-                    showUrlInput={true}
-                  />
-                </div>
+                {/* Conditional Image Upload based on model */}
+                {(['gemini', 'gpt'].includes(imgGenerationData.model)) && (
+                  <div>
+                    <Label className="text-foreground">Edit Existing Image (Optional)</Label>
+                    <p className="text-sm text-muted-foreground mb-3">Upload an image to edit it based on your prompt, or leave empty to generate a new image.</p>
+                    <ImageUpload
+                      label="Upload Image to Edit"
+                      placeholder="Select an image to edit with AI"
+                      onUploadComplete={(url) => setImgGenerationData(prev => ({ ...prev, editImageUrl: url }))}
+                      currentUrl={imgGenerationData.editImageUrl}
+                      onUrlChange={(url) => setImgGenerationData(prev => ({ ...prev, editImageUrl: url }))}
+                      showUrlInput={true}
+                    />
+                  </div>
+                )}
+
+                {/* Multiple Image Upload for Nano Banana */}
+                {imgGenerationData.model === 'nano-banana' && (
+                  <div>
+                    <Label className="text-foreground">Upload Images to Merge (Up to 10)</Label>
+                    <p className="text-sm text-muted-foreground mb-3">Upload multiple images that will be merged together based on your prompt.</p>
+                    <div className="space-y-3">
+                      {Array.from({ length: Math.max(1, imgGenerationData.multipleImageUrls.length + 1) }).map((_, index) => (
+                        <div key={index} className="relative">
+                          <ImageUpload
+                            label={`Image ${index + 1}${index === 0 ? ' (Required)' : ' (Optional)'}`}
+                            placeholder={`Select image ${index + 1} to merge`}
+                            onUploadComplete={(url) => {
+                              setImgGenerationData(prev => {
+                                const newUrls = [...prev.multipleImageUrls];
+                                newUrls[index] = url;
+                                return { ...prev, multipleImageUrls: newUrls.filter(Boolean) };
+                              });
+                            }}
+                            currentUrl={imgGenerationData.multipleImageUrls[index] || ""}
+                            onUrlChange={(url) => {
+                              setImgGenerationData(prev => {
+                                const newUrls = [...prev.multipleImageUrls];
+                                if (url) {
+                                  newUrls[index] = url;
+                                } else {
+                                  newUrls.splice(index, 1);
+                                }
+                                return { ...prev, multipleImageUrls: newUrls.filter(Boolean) };
+                              });
+                            }}
+                            showUrlInput={true}
+                            className="relative"
+                          />
+                          {imgGenerationData.multipleImageUrls.length > 0 && index < imgGenerationData.multipleImageUrls.length && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="absolute top-8 right-2 h-8 w-8 p-0"
+                              onClick={() => {
+                                setImgGenerationData(prev => {
+                                  const newUrls = [...prev.multipleImageUrls];
+                                  newUrls.splice(index, 1);
+                                  return { ...prev, multipleImageUrls: newUrls };
+                                });
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      {imgGenerationData.multipleImageUrls.length < 10 && (
+                        <p className="text-xs text-muted-foreground text-center">
+                          You can upload up to {10 - imgGenerationData.multipleImageUrls.length} more images
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {imgGenerationData.imageUrl && (
                   <div>
@@ -1451,26 +1522,21 @@ const DarkAI = () => {
                         case 'gpt':
                           imageUrl = await imageService.generateWithGPT(imgGenerationData.prompt, editImageUrl);
                           break;
-                        case 'flux-pro':
-                          if (editImageUrl) {
+                        case 'nano-banana':
+                          if (imgGenerationData.multipleImageUrls.length === 0) {
                             toast({
-                              title: "Image editing not supported",
-                              description: "Flux Pro only supports new image generation. Please use Gemini or GPT for image editing.",
+                              title: "No images to merge",
+                              description: "Please upload at least one image to merge with Nano Banana.",
                               variant: "destructive",
                             });
                             return;
                           }
+                          imageUrl = await imageService.mergeImages(imgGenerationData.prompt, imgGenerationData.multipleImageUrls);
+                          break;
+                        case 'flux-pro':
                           imageUrl = await imageService.generateWithFluxPro(imgGenerationData.prompt);
                           break;
                         case 'img-cv':
-                          if (editImageUrl) {
-                            toast({
-                              title: "Image editing not supported",
-                              description: "img-cv only supports new image generation. Please use Gemini or GPT for image editing.",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
                           imageUrl = await imageService.generateWithImgCV(imgGenerationData.prompt);
                           break;
                         default:
@@ -1480,7 +1546,11 @@ const DarkAI = () => {
                       setImgGenerationData(prev => ({ ...prev, imageUrl }));
                       toast({
                         title: "Image generated successfully!",
-                        description: editImageUrl ? "Your image has been edited." : "Your image has been created.",
+                        description: imgGenerationData.model === 'nano-banana' 
+                          ? "Your images have been merged successfully!" 
+                          : editImageUrl 
+                            ? "Your image has been edited." 
+                            : "Your image has been created.",
                       });
                     } catch (error: any) {
                       console.error("Image generation error:", error);
