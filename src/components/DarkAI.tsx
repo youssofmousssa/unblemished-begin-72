@@ -103,6 +103,8 @@ const DarkAI = () => {
     uploadedImageUrl: ""
   });
 
+  const [videoMode, setVideoMode] = useState<'text' | 'image'>('text');
+
   const [musicData, setMusicData] = useState({
     type: "",
     lyrics: "",
@@ -778,91 +780,137 @@ const DarkAI = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Text to Video Section */}
-                <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 p-6 rounded-xl border border-border space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-purple-500" />
-                    <h3 className="text-lg font-semibold text-foreground">Text to Video</h3>
-                    <div className="bg-green-500/20 text-green-600 px-2 py-1 rounded-md text-xs font-medium">FREE AUDIO</div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Generate high-quality videos with cinematic effects from text descriptions</p>
-                  
-                  <div>
-                    <Label htmlFor="text-to-video-prompt" className="text-foreground font-medium">Video Description</Label>
-                    <Textarea
-                      id="text-to-video-prompt"
-                      value={videoData.textToVideoPrompt}
-                      onChange={(e) => setVideoData(prev => ({ ...prev, textToVideoPrompt: e.target.value }))}
-                      placeholder="e.g., A majestic eagle soaring through mountain clouds at sunset, cinematic wide shot"
-                      className="min-h-20 bg-input border-border text-foreground resize-none mt-2"
-                    />
-                  </div>
-                  
-                  <Button 
-                    onClick={handleTextToVideo}
-                    disabled={isLoading || !videoData.textToVideoPrompt.trim()}
-                    className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 transition-all duration-300"
+                {/* Video Mode Selector */}
+                <div className="flex bg-muted rounded-lg p-1">
+                  <button
+                    onClick={() => setVideoMode('text')}
+                    className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                      videoMode === 'text'
+                        ? 'bg-card text-foreground shadow-sm border border-border'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
                   >
-                    {isLoading ? (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                        Creating Video...
-                      </>
-                    ) : (
-                      <>
-                        <VideoIcon className="w-4 h-4 mr-2" />
-                        Generate Video from Text
-                      </>
-                    )}
-                  </Button>
+                    <Sparkles className="w-4 h-4" />
+                    Text to Video
+                  </button>
+                  <button
+                    onClick={() => setVideoMode('image')}
+                    className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                      videoMode === 'image'
+                        ? 'bg-card text-foreground shadow-sm border border-border'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <ImageIcon className="w-4 h-4" />
+                    Image to Video
+                  </button>
                 </div>
 
-                {/* Image to Video Section */}
-                <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 p-6 rounded-xl border border-border space-y-4">
-                  <div className="flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5 text-orange-500" />
-                    <h3 className="text-lg font-semibold text-foreground">Image to Video</h3>
-                    <div className="bg-green-500/20 text-green-600 px-2 py-1 rounded-md text-xs font-medium">FREE AUDIO</div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Transform static images into dynamic videos with animations and effects</p>
-                  
-                  <ImageUpload
-                    label="Upload Image for Video Conversion"
-                    placeholder="Select an image to animate into video"
-                    onUploadComplete={(url) => setVideoData(prev => ({ ...prev, imageToVideoImageUrl: url }))}
-                    currentUrl={videoData.imageToVideoImageUrl}
-                    onUrlChange={(url) => setVideoData(prev => ({ ...prev, imageToVideoImageUrl: url }))}
-                    showUrlInput={true}
-                  />
-                  
-                  <div>
-                    <Label htmlFor="image-to-video-prompt" className="text-foreground font-medium">Animation Instructions</Label>
-                    <Textarea
-                      id="image-to-video-prompt"
-                      value={videoData.imageToVideoPrompt}
-                      onChange={(e) => setVideoData(prev => ({ ...prev, imageToVideoPrompt: e.target.value }))}
-                      placeholder="e.g., make the character walk forward, add flowing hair and clothes movement"
-                      className="min-h-20 bg-input border-border text-foreground resize-none mt-2"
-                    />
-                  </div>
-                  
-                  <Button 
-                    onClick={handleImageToVideo}
-                    disabled={isLoading || !videoData.imageToVideoPrompt.trim() || !videoData.imageToVideoImageUrl.trim()}
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                        Animating Image...
-                      </>
-                    ) : (
-                      <>
-                        <VideoIcon className="w-4 h-4 mr-2" />
-                        Convert Image to Video
-                      </>
-                    )}
-                  </Button>
+                {/* Video Generation Content */}
+                <div className="bg-card/50 border border-border rounded-lg p-6 space-y-4">
+                  {videoMode === 'text' ? (
+                    // Text to Video Mode
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        <h3 className="text-lg font-semibold text-foreground">Text to Video Generation</h3>
+                        <div className="bg-primary/20 text-primary px-2 py-1 rounded-md text-xs font-medium border border-primary/30">
+                          FREE AUDIO
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Generate high-quality videos with cinematic effects from text descriptions
+                      </p>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="text-to-video-prompt" className="text-foreground font-medium">
+                          Video Description
+                        </Label>
+                        <Textarea
+                          id="text-to-video-prompt"
+                          value={videoData.textToVideoPrompt}
+                          onChange={(e) => setVideoData(prev => ({ ...prev, textToVideoPrompt: e.target.value }))}
+                          placeholder="e.g., A majestic eagle soaring through mountain clouds at sunset, cinematic wide shot"
+                          className="min-h-24 bg-input border-border text-foreground resize-none"
+                        />
+                      </div>
+                      
+                      <Button 
+                        onClick={handleTextToVideo}
+                        disabled={isLoading || !videoData.textToVideoPrompt.trim()}
+                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                            Creating Video...
+                          </>
+                        ) : (
+                          <>
+                            <VideoIcon className="w-4 h-4 mr-2" />
+                            Generate Video from Text
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    // Image to Video Mode
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <ImageIcon className="w-5 h-5 text-primary" />
+                        <h3 className="text-lg font-semibold text-foreground">Image to Video Conversion</h3>
+                        <div className="bg-primary/20 text-primary px-2 py-1 rounded-md text-xs font-medium border border-primary/30">
+                          FREE AUDIO
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Transform static images into dynamic videos with animations and effects
+                      </p>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="image-to-video-prompt" className="text-foreground font-medium">
+                          Animation Instructions
+                        </Label>
+                        <Textarea
+                          id="image-to-video-prompt"
+                          value={videoData.imageToVideoPrompt}
+                          onChange={(e) => setVideoData(prev => ({ ...prev, imageToVideoPrompt: e.target.value }))}
+                          placeholder="e.g., make the character walk forward, add flowing hair and clothes movement"
+                          className="min-h-20 bg-input border-border text-foreground resize-none"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-foreground font-medium">Upload Image</Label>
+                        <ImageUpload
+                          label=""
+                          placeholder="Select an image to animate into video"
+                          onUploadComplete={(url) => setVideoData(prev => ({ ...prev, imageToVideoImageUrl: url }))}
+                          currentUrl={videoData.imageToVideoImageUrl}
+                          onUrlChange={(url) => setVideoData(prev => ({ ...prev, imageToVideoImageUrl: url }))}
+                          showUrlInput={true}
+                        />
+                      </div>
+                      
+                      <Button 
+                        onClick={handleImageToVideo}
+                        disabled={isLoading || !videoData.imageToVideoPrompt.trim() || !videoData.imageToVideoImageUrl.trim()}
+                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                            Animating Image...
+                          </>
+                        ) : (
+                          <>
+                            <VideoIcon className="w-4 h-4 mr-2" />
+                            Convert Image to Video
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Generated Video Display */}
