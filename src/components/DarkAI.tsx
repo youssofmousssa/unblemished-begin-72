@@ -97,10 +97,9 @@ const DarkAI = () => {
   });
 
   const [videoData, setVideoData] = useState({
-    type: "",
-    prompt: "",
-    imageUrl: "",
-    videoUrl: "",
+    textToVideoPrompt: "",
+    imageToVideoPrompt: "",
+    imageToVideoImageUrl: "",
     uploadedImageUrl: ""
   });
 
@@ -287,23 +286,13 @@ const DarkAI = () => {
     }
   };
 
-  const handleVideoGeneration = async () => {
+  const handleTextToVideo = async () => {
     if (!checkEmailVerification()) return;
     
-    if (!videoData.type || !videoData.prompt) {
+    if (!videoData.textToVideoPrompt.trim()) {
       toast({
         title: "Error",
-        description: "Please select type and enter a prompt",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const imageUrl = videoData.uploadedImageUrl || videoData.imageUrl;
-    if (videoData.type === "image-to-video" && (!imageUrl || !imageUrl.trim())) {
-      toast({
-        title: "Error",
-        description: "Image is required for image-to-video conversion",
+        description: "Please enter a description for your video",
         variant: "destructive"
       });
       return;
@@ -311,43 +300,60 @@ const DarkAI = () => {
 
     setIsLoading(true);
     try {
-      const endpoint = videoData.type === "text-to-video" 
-        ? "/api/veo3/text-to-video"
-        : "/api/veo3/image-to-video";
-      
-      let body: any = {
-        text: videoData.prompt,
-        api_key: API_KEY
-      };
-
-      if (videoData.type === "image-to-video") {
-        const imageUrl = videoData.uploadedImageUrl || videoData.imageUrl;
-        body.link = imageUrl.trim();
-      }
-
-      const response = await fetch(`${BASE_URL}${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      const videoUrl = result.url || result.video_url || result.video || "Video generated successfully";
-      setVideoData(prev => ({ ...prev, videoUrl }));
+      const result = await DarkAIService.generateTextToVideo(videoData.textToVideoPrompt);
       processApiResponse(result);
       
       toast({
         title: "Success",
-        description: "Video generated successfully!"
+        description: "Video generated successfully from text!"
       });
     } catch (error) {
-      console.error("Video generation error:", error);
+      console.error("Text-to-video generation error:", error);
+      toast({
+        title: "Error",
+        description: `Failed to generate video: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImageToVideo = async () => {
+    if (!checkEmailVerification()) return;
+    
+    if (!videoData.imageToVideoPrompt.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter instructions for your video",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!videoData.imageToVideoImageUrl.trim()) {
+      toast({
+        title: "Error",
+        description: "Please upload an image first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await DarkAIService.generateImageToVideo(
+        videoData.imageToVideoPrompt, 
+        videoData.imageToVideoImageUrl
+      );
+      processApiResponse(result);
+      
+      toast({
+        title: "Success",
+        description: "Video generated successfully from image!"
+      });
+    } catch (error) {
+      console.error("Image-to-video generation error:", error);
       toast({
         title: "Error",
         description: `Failed to generate video: ${error.message}`,
@@ -765,103 +771,158 @@ const DarkAI = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-primary">
                   <VideoIcon className="w-6 h-6" />
-                  Video Generation
+                  Professional Video Generation
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
-                  Create videos from text prompts or transform images into videos
+                  Create cinematic videos from text prompts or transform images into dynamic videos with FREE audio support
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="video-type" className="text-foreground">Video Type</Label>
-                  <Select value={videoData.type} onValueChange={(value) => setVideoData(prev => ({ ...prev, type: value }))}>
-                    <SelectTrigger className="bg-input border-border text-foreground">
-                      <SelectValue placeholder="Select Video Type" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border-border">
-                      <SelectItem value="text-to-video" className="text-popover-foreground">Text to Video</SelectItem>
-                      <SelectItem value="image-to-video" className="text-popover-foreground">Image to Video</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <CardContent className="space-y-6">
+                {/* Text to Video Section */}
+                <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 p-6 rounded-xl border border-border space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-500" />
+                    <h3 className="text-lg font-semibold text-foreground">Text to Video</h3>
+                    <div className="bg-green-500/20 text-green-600 px-2 py-1 rounded-md text-xs font-medium">FREE AUDIO</div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Generate high-quality videos with cinematic effects from text descriptions</p>
+                  
+                  <div>
+                    <Label htmlFor="text-to-video-prompt" className="text-foreground font-medium">Video Description</Label>
+                    <Textarea
+                      id="text-to-video-prompt"
+                      value={videoData.textToVideoPrompt}
+                      onChange={(e) => setVideoData(prev => ({ ...prev, textToVideoPrompt: e.target.value }))}
+                      placeholder="e.g., A majestic eagle soaring through mountain clouds at sunset, cinematic wide shot"
+                      className="min-h-20 bg-input border-border text-foreground resize-none mt-2"
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={handleTextToVideo}
+                    disabled={isLoading || !videoData.textToVideoPrompt.trim()}
+                    className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 transition-all duration-300"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                        Creating Video...
+                      </>
+                    ) : (
+                      <>
+                        <VideoIcon className="w-4 h-4 mr-2" />
+                        Generate Video from Text
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <div>
-                  <Label htmlFor="video-prompt" className="text-foreground">Video Description</Label>
-                  <Textarea
-                    value={videoData.prompt}
-                    onChange={(e) => setVideoData(prev => ({ ...prev, prompt: e.target.value }))}
-                    placeholder="Describe the video you want to create..."
-                    className="min-h-24 bg-input border-border text-foreground resize-none"
-                  />
-                </div>
-                {videoData.type === "image-to-video" && (
+
+                {/* Image to Video Section */}
+                <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 p-6 rounded-xl border border-border space-y-4">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-5 h-5 text-orange-500" />
+                    <h3 className="text-lg font-semibold text-foreground">Image to Video</h3>
+                    <div className="bg-green-500/20 text-green-600 px-2 py-1 rounded-md text-xs font-medium">FREE AUDIO</div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Transform static images into dynamic videos with animations and effects</p>
+                  
                   <ImageUpload
-                    label="Upload Image for Video Generation"
-                    placeholder="Select an image to convert to video"
-                    onUploadComplete={(url) => setVideoData(prev => ({ ...prev, uploadedImageUrl: url }))}
-                    currentUrl={videoData.imageUrl}
-                    onUrlChange={(url) => setVideoData(prev => ({ ...prev, imageUrl: url }))}
+                    label="Upload Image for Video Conversion"
+                    placeholder="Select an image to animate into video"
+                    onUploadComplete={(url) => setVideoData(prev => ({ ...prev, imageToVideoImageUrl: url }))}
+                    currentUrl={videoData.imageToVideoImageUrl}
+                    onUrlChange={(url) => setVideoData(prev => ({ ...prev, imageToVideoImageUrl: url }))}
                     showUrlInput={true}
                   />
-                )}
-                {videoData.videoUrl && (
+                  
                   <div>
-                    <Label className="text-foreground">Generated Video</Label>
-                    <div className="bg-gradient-to-br from-red-500/5 to-pink-500/10 p-6 rounded-xl border border-border space-y-4">
-                      <div className="text-center">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-600 rounded-full border border-green-500/20">
-                          <VideoIcon className="w-4 h-4" />
-                          <span className="text-sm font-medium">Video Generated Successfully!</span>
+                    <Label htmlFor="image-to-video-prompt" className="text-foreground font-medium">Animation Instructions</Label>
+                    <Textarea
+                      id="image-to-video-prompt"
+                      value={videoData.imageToVideoPrompt}
+                      onChange={(e) => setVideoData(prev => ({ ...prev, imageToVideoPrompt: e.target.value }))}
+                      placeholder="e.g., make the character walk forward, add flowing hair and clothes movement"
+                      className="min-h-20 bg-input border-border text-foreground resize-none mt-2"
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={handleImageToVideo}
+                    disabled={isLoading || !videoData.imageToVideoPrompt.trim() || !videoData.imageToVideoImageUrl.trim()}
+                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-300"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                        Animating Image...
+                      </>
+                    ) : (
+                      <>
+                        <VideoIcon className="w-4 h-4 mr-2" />
+                        Convert Image to Video
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Generated Video Display */}
+                {processedMedia && processedMedia.type === 'video' && (
+                  <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6 rounded-xl border border-green-500/20">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-600 rounded-full border border-green-500/30">
+                          <VideoIcon className="w-5 h-5" />
+                          <span className="font-medium">🎬 Professional MP4 Video Generated!</span>
                         </div>
                       </div>
                       
-                      {videoData.videoUrl.startsWith('http') ? (
-                        <div className="text-center">
-                          <video 
-                            controls 
-                            className="max-w-full h-64 mx-auto rounded-lg shadow-lg mb-4"
-                            preload="metadata"
-                          >
-                            <source src={videoData.videoUrl} type="video/mp4" />
-                            <source src={videoData.videoUrl} type="video/webm" />
-                            Your browser does not support the video element.
-                          </video>
-                          
+                      <div className="text-center">
+                        <video 
+                          controls 
+                          className="max-w-full max-h-96 mx-auto rounded-xl shadow-2xl border border-border"
+                          preload="metadata"
+                          poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQwIiBoZWlnaHQ9IjM2MCIgdmlld0JveD0iMCAwIDY0MCAzNjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI2NDAiIGhlaWdodD0iMzYwIiBmaWxsPSIjMTExODI3IiBmaWxsLW9wYWNpdHk9IjAuOSIvPgo8Y2lyY2xlIGN4PSIzMjAiIGN5PSIxODAiIHI9IjQwIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIwLjgiLz4KPHN2ZyB4PSIzMDAiIHk9IjE2MCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9IiMxMTE4MjciPgo8cGF0aCBkPSJNOCA1djE0bDExLTdMOCA1WiIvPgo8L3N2Zz4KPC9zdmc+"
+                        >
+                          <source src={processedMedia.url} type="video/mp4" />
+                          Your browser does not support the video element.
+                        </video>
+                        
+                        <div className="mt-4 space-y-2">
+                          {processedMedia.metadata?.title && (
+                            <p className="text-sm font-medium text-foreground">{processedMedia.metadata.title}</p>
+                          )}
+                          {processedMedia.metadata?.date && (
+                            <p className="text-xs text-muted-foreground">Generated: {processedMedia.metadata.date}</p>
+                          )}
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(videoData.videoUrl, '_blank')}
+                            onClick={() => window.open(processedMedia.url, '_blank')}
+                            className="border-green-500/30 text-green-600 hover:bg-green-500/10"
                           >
                             <Download className="w-4 h-4 mr-2" />
-                            Download Video
+                            Download MP4
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(processedMedia.url);
+                              toast({ title: "Link copied!", description: "Video URL copied to clipboard" });
+                            }}
+                            className="border-blue-500/30 text-blue-600 hover:bg-blue-500/10"
+                          >
+                            <VideoIcon className="w-4 h-4 mr-2" />
+                            Copy Link
                           </Button>
                         </div>
-                      ) : (
-                        <div className="bg-muted/50 p-4 rounded-lg max-h-64 overflow-auto">
-                          <pre className="text-sm text-foreground whitespace-pre-wrap text-left">
-                            {videoData.videoUrl}
-                          </pre>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 )}
-                <Button 
-                  onClick={handleVideoGeneration}
-                  disabled={isLoading}
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  {isLoading ? (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <VideoIcon className="w-4 h-4 mr-2" />
-                      Generate Video
-                    </>
-                  )}
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>

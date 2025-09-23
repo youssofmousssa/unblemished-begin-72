@@ -21,6 +21,12 @@ export interface SocialDownloadResponse {
   dev: string;
 }
 
+export interface VideoGenerationResponse {
+  date: string;
+  video: string;
+  dev: string;
+}
+
 export class DarkAIService {
   // Create 15s instrumental music
   static async create15sMusic(text: string): Promise<MusicCreationResponse> {
@@ -115,5 +121,48 @@ export class DarkAIService {
     const cleanTitle = title.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
     const extension = link.type === 'audio' ? 'mp3' : 'mp4';
     return `${cleanTitle}_${link.quality}.${extension}`;
+  }
+
+  // Text to Video Generation
+  static async generateTextToVideo(text: string): Promise<VideoGenerationResponse> {
+    const response = await fetch(`${BASE_URL}/api/veo3/text-to-video`, {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        text,
+        api_key: API_KEY
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  // Image to Video Generation
+  static async generateImageToVideo(text: string, imageUrl: string): Promise<VideoGenerationResponse> {
+    const response = await fetch(`${BASE_URL}/api/veo3/image-to-video`, {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        text,
+        link: imageUrl,
+        api_key: API_KEY
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
   }
 }

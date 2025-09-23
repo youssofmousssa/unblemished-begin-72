@@ -9,6 +9,7 @@ interface ProcessedMedia {
     duration?: number;
     size?: string;
     style?: string;
+    date?: string;
   };
 }
 
@@ -88,6 +89,16 @@ export const useMediaProcessor = (): UseMediaProcessorReturn => {
           metadata: {
             title: response.title,
             duration: response.duration
+          }
+        };
+      } else if (response.video) {
+        // Video generation API response
+        media = {
+          type: 'video',
+          url: response.video,
+          metadata: {
+            title: response.title || 'Generated Video',
+            date: response.date
           }
         };
       } else if (response.voice) {
