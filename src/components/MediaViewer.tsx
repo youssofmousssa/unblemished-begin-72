@@ -283,17 +283,6 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ mediaData, isLoading = false 
                         )}
                         <p className="text-white/80 text-sm">Premium Video Player</p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="icon" className="control-button h-10 w-10 text-white">
-                          <Heart className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="control-button h-10 w-10 text-white">
-                          <Share2 className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="control-button h-10 w-10 text-white">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </div>
                     </div>
                   </div>
                   
@@ -322,9 +311,9 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ mediaData, isLoading = false 
                           variant="ghost"
                           size="icon"
                           onClick={() => skip(-10)}
-                          className="control-button h-10 w-10 text-white"
+                          className="control-button h-8 w-8 text-white"
                         >
-                          <SkipBack className="h-4 w-4" />
+                          <SkipBack className="h-3 w-3" />
                         </Button>
                         
                         {/* Main Play/Pause */}
@@ -332,9 +321,9 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ mediaData, isLoading = false 
                           variant="ghost"
                           size="icon"
                           onClick={togglePlayPause}
-                          className="h-14 w-14 rounded-full bg-primary text-background hover:scale-110 transition-all duration-300"
+                          className="h-10 w-10 rounded-full bg-primary text-background hover:scale-110 transition-all duration-300"
                         >
-                          {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-0.5" />}
+                          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
                         </Button>
                         
                         {/* Skip Forward */}
@@ -342,9 +331,9 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ mediaData, isLoading = false 
                           variant="ghost"
                           size="icon"
                           onClick={() => skip(10)}
-                          className="control-button h-10 w-10 text-white"
+                          className="control-button h-8 w-8 text-white"
                         >
-                          <SkipForward className="h-4 w-4" />
+                          <SkipForward className="h-3 w-3" />
                         </Button>
                         
                         {/* Volume Controls */}
@@ -353,9 +342,9 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ mediaData, isLoading = false 
                             variant="ghost"
                             size="icon"
                             onClick={toggleMute}
-                            className="control-button h-10 w-10 text-white"
+                            className="control-button h-8 w-8 text-white"
                           >
-                            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                            {isMuted ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
                           </Button>
                           <Slider
                             value={[isMuted ? 0 : volume * 100]}
@@ -372,17 +361,17 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ mediaData, isLoading = false 
                           variant="ghost"
                           size="icon"
                           onClick={() => downloadFile(mediaData.url, 'video')}
-                          className="control-button h-10 w-10 text-white"
+                          className="control-button h-8 w-8 text-white"
                         >
-                          <Download className="h-4 w-4" />
+                          <Download className="h-3 w-3" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={toggleFullscreen}
-                          className="control-button h-10 w-10 text-white"
+                          className="control-button h-8 w-8 text-white"
                         >
-                          <Maximize2 className="h-4 w-4" />
+                          <Maximize2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
@@ -408,24 +397,17 @@ const MediaViewer: React.FC<MediaViewerProps> = ({ mediaData, isLoading = false 
                         variant="ghost"
                         size="icon"
                         onClick={() => downloadFile(mediaData.url, 'image')}
-                        className="h-12 w-12 rounded-full glass-effect text-white hover:scale-110 transition-all duration-300 shadow-control"
+                        className="h-8 w-8 rounded-full glass-effect text-white hover:scale-110 transition-all duration-300 shadow-control"
                       >
-                        <Download className="h-5 w-5" />
+                        <Download className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={toggleFullscreen}
-                        className="h-12 w-12 rounded-full glass-effect text-white hover:scale-110 transition-all duration-300 shadow-control"
+                        className="h-8 w-8 rounded-full glass-effect text-white hover:scale-110 transition-all duration-300 shadow-control"
                       >
-                        <Maximize2 className="h-5 w-5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-12 w-12 rounded-full glass-effect text-white hover:scale-110 transition-all duration-300 shadow-control"
-                      >
-                        <ExternalLink className="h-5 w-5" />
+                        <Maximize2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>

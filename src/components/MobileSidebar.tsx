@@ -45,7 +45,7 @@ export const AnimatedHamburger: React.FC<{ isOpen: boolean; onClick: () => void 
       variant="ghost"
       size="sm"
       onClick={onClick}
-      className="relative w-10 h-10 p-0 focus:outline-none md:hidden"
+      className="relative w-10 h-10 p-0 focus:outline-none"
     >
       <div className="w-6 h-6 flex flex-col justify-center items-center">
         <motion.div
@@ -102,7 +102,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
             onClick={onClose}
           />
         )}
@@ -116,7 +116,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed left-0 top-0 bottom-0 w-80 bg-card border-r border-border z-50 md:hidden overflow-hidden"
+            className="fixed left-0 top-0 bottom-0 w-80 bg-card border-r border-border z-50 overflow-hidden"
           >
             <div className="flex flex-col h-full">
               {/* Header */}

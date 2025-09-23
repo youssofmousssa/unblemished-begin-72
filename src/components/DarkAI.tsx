@@ -543,8 +543,8 @@ const DarkAI = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Fixed Mobile Header with Hamburger Menu */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border/50">
+      {/* Fixed Header with Hamburger Menu - Mobile & Desktop */}
+      <div className="fixed top-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border/50">
         <div className="flex items-center justify-between px-4 py-3">
           <AnimatedHamburger 
             isOpen={isMobileSidebarOpen} 
@@ -558,7 +558,7 @@ const DarkAI = () => {
       </div>
 
       {/* Header */}
-      <div className="container mx-auto px-6 py-8 pt-20 md:pt-8">
+      <div className="container mx-auto px-6 py-8 pt-20">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-5xl font-bold mb-4 text-primary">
             DarkAI Platform
@@ -593,35 +593,6 @@ const DarkAI = () => {
           )}
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            {/* Desktop Header with Hamburger Menu */}
-            <div className="hidden md:flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <AnimatedDesktopHamburger 
-                  isOpen={isDesktopSidebarOpen} 
-                  onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)} 
-                />
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl shadow-glow">
-                    <span className="text-2xl">🔥</span>
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                      {tabs.find(tab => tab.id === activeTab)?.label || 'DarkAI Platform'}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">Advanced AI Services</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop Sidebar */}
-            <DesktopSidebar
-              isOpen={isDesktopSidebarOpen}
-              onClose={() => setIsDesktopSidebarOpen(false)}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              tabs={tabs}
-            />
 
             {/* Mobile Sidebar */}
             <MobileSidebar
