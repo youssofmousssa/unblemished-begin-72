@@ -22,7 +22,8 @@ import {
   RotateCcw,
   Eye,
   Mail,
-  X
+  X,
+  Edit
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MediaViewer from "@/components/MediaViewer";
@@ -130,6 +131,8 @@ const DarkAI = () => {
     editImageUrl: "",
     multipleImageUrls: [] as string[]
   });
+
+  const [nanoBananaMode, setNanoBananaMode] = useState<'generate' | 'edit'>('generate');
 
   const tabs = [
     { id: "video-generation", label: "Video Generation", icon: VideoIcon },
@@ -1468,63 +1471,94 @@ const DarkAI = () => {
                   </div>
                 )}
 
-                {/* Multiple Image Upload for Nano Banana */}
+                {/* Nano Banana Section with Tabs */}
                 {imgGenerationData.model === 'nano-banana' && (
-                  <div>
-                    <Label className="text-foreground">Upload Images to Merge (Up to 10)</Label>
-                    <p className="text-sm text-muted-foreground mb-3">Upload multiple images that will be merged together based on your prompt.</p>
-                    <div className="space-y-3">
-                      {Array.from({ length: Math.max(1, imgGenerationData.multipleImageUrls.length + 1) }).map((_, index) => (
-                        <div key={index} className="relative">
-                          <ImageUpload
-                            label={`Image ${index + 1}${index === 0 ? ' (Required)' : ' (Optional)'}`}
-                            placeholder={`Select image ${index + 1} to merge`}
-                            onUploadComplete={(url) => {
-                              setImgGenerationData(prev => {
-                                const newUrls = [...prev.multipleImageUrls];
-                                newUrls[index] = url;
-                                return { ...prev, multipleImageUrls: newUrls.filter(Boolean) };
-                              });
-                            }}
-                            currentUrl={imgGenerationData.multipleImageUrls[index] || ""}
-                            onUrlChange={(url) => {
-                              setImgGenerationData(prev => {
-                                const newUrls = [...prev.multipleImageUrls];
-                                if (url) {
-                                  newUrls[index] = url;
-                                } else {
-                                  newUrls.splice(index, 1);
-                                }
-                                return { ...prev, multipleImageUrls: newUrls.filter(Boolean) };
-                              });
-                            }}
-                            showUrlInput={true}
-                            className="relative"
-                          />
-                          {imgGenerationData.multipleImageUrls.length > 0 && index < imgGenerationData.multipleImageUrls.length && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="absolute top-8 right-2 h-8 w-8 p-0"
-                              onClick={() => {
-                                setImgGenerationData(prev => {
-                                  const newUrls = [...prev.multipleImageUrls];
-                                  newUrls.splice(index, 1);
-                                  return { ...prev, multipleImageUrls: newUrls };
-                                });
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
+                  <div className="space-y-4">
+                    {/* Nano Banana Mode Tabs */}
+                    <Tabs value={nanoBananaMode} onValueChange={(value) => setNanoBananaMode(value as 'generate' | 'edit')}>
+                      <TabsList className="grid w-full grid-cols-2 bg-slate-800/50 border border-slate-700">
+                        <TabsTrigger 
+                          value="generate" 
+                          className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-300"
+                        >
+                          Image Generation
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="edit" 
+                          className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-300"
+                        >
+                          Image Edit
+                        </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="generate" className="space-y-3 mt-4">
+                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border border-slate-700">
+                          <ImageIcon className="h-12 w-12 mx-auto mb-2 text-slate-400" />
+                          <h3 className="font-medium text-white mb-1">Text to Image Generation</h3>
+                          <p className="text-sm text-slate-400">Generate images from text description only</p>
                         </div>
-                      ))}
-                      {imgGenerationData.multipleImageUrls.length < 10 && (
-                        <p className="text-xs text-muted-foreground text-center">
-                          You can upload up to {10 - imgGenerationData.multipleImageUrls.length} more images
-                        </p>
-                      )}
-                    </div>
+                      </TabsContent>
+
+                      <TabsContent value="edit" className="space-y-3 mt-4">
+                        <div className="space-y-4">
+                          <div className="text-center p-4 bg-slate-800/30 rounded-lg border border-slate-700">
+                            <Edit className="h-12 w-12 mx-auto mb-2 text-slate-400" />
+                            <h3 className="font-medium text-white mb-1">Image Editing & Merging</h3>
+                            <p className="text-sm text-slate-400">Upload images to edit or merge them based on your prompt</p>
+                          </div>
+                          
+                          <Label className="text-white">Upload Images to Edit/Merge (Up to 10)</Label>
+                          <p className="text-sm text-slate-400 mb-3">Upload multiple images that will be edited or merged together based on your prompt.</p>
+                          <div className="space-y-3">
+                            {Array.from({ length: Math.max(1, imgGenerationData.multipleImageUrls.length + 1) }).map((_, index) => (
+                              <div key={index} className="relative">
+                                <ImageUpload
+                                  label={`Image ${index + 1}${index === 0 ? ' (Required)' : ' (Optional)'}`}
+                                  placeholder={`Select image ${index + 1} to edit/merge`}
+                                  onUploadComplete={(url) => {
+                                    setImgGenerationData(prev => {
+                                      const newUrls = [...prev.multipleImageUrls];
+                                      newUrls[index] = url;
+                                      return { ...prev, multipleImageUrls: newUrls.filter(Boolean) };
+                                    });
+                                  }}
+                                  currentUrl={imgGenerationData.multipleImageUrls[index] || ""}
+                                  onUrlChange={(url) => {
+                                    setImgGenerationData(prev => {
+                                      const newUrls = [...prev.multipleImageUrls];
+                                      if (url) {
+                                        newUrls[index] = url;
+                                      } else {
+                                        newUrls.splice(index, 1);
+                                      }
+                                      return { ...prev, multipleImageUrls: newUrls.filter(Boolean) };
+                                    });
+                                  }}
+                                  showUrlInput={true}
+                                  className="relative"
+                                />
+                                {imgGenerationData.multipleImageUrls.length > 0 && index < imgGenerationData.multipleImageUrls.length && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="absolute top-8 right-2 h-8 w-8 p-0 bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700"
+                                    onClick={() => {
+                                      setImgGenerationData(prev => {
+                                        const newUrls = [...prev.multipleImageUrls];
+                                        newUrls.splice(index, 1);
+                                        return { ...prev, multipleImageUrls: newUrls };
+                                      });
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 )}
 
@@ -1603,15 +1637,20 @@ const DarkAI = () => {
                           imageUrl = await imageService.generateWithGPT(imgGenerationData.prompt, editImageUrl);
                           break;
                         case 'nano-banana':
-                          if (imgGenerationData.multipleImageUrls.length === 0) {
-                            toast({
-                              title: "No images to merge",
-                              description: "Please upload at least one image to merge with Nano Banana.",
-                              variant: "destructive",
-                            });
-                            return;
+                          if (nanoBananaMode === 'edit') {
+                            if (imgGenerationData.multipleImageUrls.length === 0) {
+                              toast({
+                                title: "No images to edit",
+                                description: "Please upload at least one image to edit with Nano Banana.",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            imageUrl = await imageService.mergeImages(imgGenerationData.prompt, imgGenerationData.multipleImageUrls);
+                          } else {
+                            // Generate mode - no images needed, just text
+                            imageUrl = await imageService.mergeImages(imgGenerationData.prompt, []);
                           }
-                          imageUrl = await imageService.mergeImages(imgGenerationData.prompt, imgGenerationData.multipleImageUrls);
                           break;
                         case 'flux-pro':
                           imageUrl = await imageService.generateWithFluxPro(imgGenerationData.prompt);
@@ -1627,7 +1666,7 @@ const DarkAI = () => {
                       toast({
                         title: "Image generated successfully!",
                         description: imgGenerationData.model === 'nano-banana' 
-                          ? "Your images have been merged successfully!" 
+                          ? (nanoBananaMode === 'edit' ? "Your images have been edited/merged successfully!" : "Your image has been generated successfully!")
                           : editImageUrl 
                             ? "Your image has been edited." 
                             : "Your image has been created.",
