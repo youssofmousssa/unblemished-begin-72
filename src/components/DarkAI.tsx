@@ -134,16 +134,6 @@ const DarkAI = () => {
 
   const [nanoBananaMode, setNanoBananaMode] = useState<'generate' | 'edit'>('generate');
 
-  // New Image Models states
-  const [activeImageTab, setActiveImageTab] = useState<'generation' | 'editing' | 'enhance'>('generation');
-  const [selectedGenModel, setSelectedGenModel] = useState<'img-bo' | 'gpt-imager' | 'seedream-4'>('img-bo');
-  const [selectedEditModel, setSelectedEditModel] = useState<'gpt-imager' | 'seedream-4'>('gpt-imager');
-  const [imageGenPrompt, setImageGenPrompt] = useState('');
-  const [imageEditPrompt, setImageEditPrompt] = useState('');
-  const [imageSize, setImageSize] = useState('1024x1024');
-  const [uploadedEditImages, setUploadedEditImages] = useState<string[]>([]);
-  const [uploadedEnhanceImage, setUploadedEnhanceImage] = useState<string>('');
-
   const tabs = [
     { id: "video-generation", label: "Video Generation", icon: VideoIcon },
     { id: "img-generation", label: "IMG Generation", icon: ImageIcon },
@@ -489,129 +479,6 @@ const DarkAI = () => {
         title: "Download Link Opened",
         description: "The download link has been opened in a new tab."
       });
-    }
-  };
-
-  // New Image Models handlers
-  const handleImageGeneration = async () => {
-    if (!checkEmailVerification()) return;
-    if (!imageGenPrompt.trim()) return;
-
-    setIsLoading(true);
-    try {
-      let result = '';
-      
-      switch (selectedGenModel) {
-        case 'img-bo':
-          result = await imageService.generateWithImgBo(imageGenPrompt, imageSize);
-          break;
-        case 'gpt-imager':
-          result = await imageService.generateWithGptImager(imageGenPrompt);
-          break;
-        case 'seedream-4':
-          result = await imageService.generateWithSeedream4(imageGenPrompt);
-          break;
-      }
-
-      if (result) {
-        processApiResponse(result);
-        setImageGenPrompt('');
-      }
-    } catch (error) {
-      console.error('Error generating image:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate image. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleImageEditUpload = (urls: string[]) => {
-    if (selectedEditModel === 'gpt-imager' && urls.length > 1) {
-      setUploadedEditImages([urls[0]]);
-      toast({
-        title: "Info",
-        description: "GPT-Imager can only edit one image at a time. Using the first image.",
-        variant: "default",
-      });
-    } else if (selectedEditModel === 'seedream-4' && urls.length > 4) {
-      setUploadedEditImages(urls.slice(0, 4));
-      toast({
-        title: "Info",
-        description: "SeedReam-4 can edit up to 4 images. Using the first 4 images.",
-        variant: "default",
-      });
-    } else {
-      setUploadedEditImages(urls);
-    }
-  };
-
-  const removeEditImage = (index: number) => {
-    setUploadedEditImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleImageEditing = async () => {
-    if (!checkEmailVerification()) return;
-    if (!imageEditPrompt.trim() || uploadedEditImages.length === 0) return;
-
-    setIsLoading(true);
-    try {
-      let result = '';
-      
-      switch (selectedEditModel) {
-        case 'gpt-imager':
-          result = await imageService.editWithGptImager(imageEditPrompt, uploadedEditImages[0]);
-          break;
-        case 'seedream-4':
-          result = await imageService.editWithSeedream4(imageEditPrompt, uploadedEditImages);
-          break;
-      }
-
-      if (result) {
-        processApiResponse(result);
-        setImageEditPrompt('');
-        setUploadedEditImages([]);
-      }
-    } catch (error) {
-      console.error('Error editing image:', error);
-      toast({
-        title: "Error",
-        description: "Failed to edit image. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEnhanceImageUpload = (urls: string[]) => {
-    setUploadedEnhanceImage(urls[0]);
-  };
-
-  const handleImageEnhancement = async () => {
-    if (!checkEmailVerification()) return;
-    if (!uploadedEnhanceImage) return;
-
-    setIsLoading(true);
-    try {
-      const result = await imageService.enhanceQuality(uploadedEnhanceImage);
-      
-      if (result) {
-        processApiResponse(result);
-        setUploadedEnhanceImage('');
-      }
-    } catch (error) {
-      console.error('Error enhancing image:', error);
-      toast({
-        title: "Error",
-        description: "Failed to enhance image quality. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -1529,226 +1396,307 @@ const DarkAI = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-primary">
                   <ImageIcon className="w-6 h-6" />
-                  AI Image Models
+                  Image Generation
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
-                  Generate, edit, and enhance images with advanced AI models
+                  Generate high-quality images from text prompts using AI
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Tab Navigation */}
-                <div className="flex border-b border-border mb-6 overflow-x-auto">
-                  <button
-                    onClick={() => setActiveImageTab('generation')}
-                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${
-                      activeImageTab === 'generation'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Generation
-                  </button>
-                  <button
-                    onClick={() => setActiveImageTab('editing')}
-                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${
-                      activeImageTab === 'editing'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Editing
-                  </button>
-                  <button
-                    onClick={() => setActiveImageTab('enhance')}
-                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${
-                      activeImageTab === 'enhance'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Quality Enhance
-                  </button>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="imgPrompt" className="text-foreground">Image Prompt</Label>
+                  <Textarea
+                    id="imgPrompt"
+                    value={imgGenerationData.prompt}
+                    onChange={(e) => setImgGenerationData(prev => ({ ...prev, prompt: e.target.value }))}
+                    placeholder="Describe the image you want to generate..."
+                    className="min-h-24 bg-input border-border text-foreground resize-none"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="imgModel" className="text-foreground">AI Model</Label>
+                  <Select value={imgGenerationData.model} onValueChange={(value) => setImgGenerationData(prev => ({ ...prev, model: value, editImageUrl: "", multipleImageUrls: [] }))}>
+                    <SelectTrigger className="bg-input border-border text-foreground">
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gemini">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Gemini Pro</span>
+                          <span className="text-xs text-muted-foreground">Supports image editing</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="gpt">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">GPT-5</span>
+                          <span className="text-xs text-muted-foreground">Supports image editing</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="nano-banana">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Nano Banana</span>
+                          <span className="text-xs text-muted-foreground">Merge up to 10 images</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="flux-pro">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Flux Pro</span>
+                          <span className="text-xs text-muted-foreground">Text-to-image only</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="img-cv">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">High Quality (img-cv)</span>
+                          <span className="text-xs text-muted-foreground">Text-to-image only</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                {/* Generation Tab */}
-                {activeImageTab === 'generation' && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <button
-                        onClick={() => setSelectedGenModel('img-bo')}
-                        className={`p-4 border rounded-lg text-left transition-colors ${
-                          selectedGenModel === 'img-bo'
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="font-medium text-foreground">IMG-BO</div>
-                        <div className="text-sm text-muted-foreground">Ultra-realistic generation</div>
-                      </button>
-                      <button
-                        onClick={() => setSelectedGenModel('gpt-imager')}
-                        className={`p-4 border rounded-lg text-left transition-colors ${
-                          selectedGenModel === 'gpt-imager'
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="font-medium text-foreground">GPT-Imager</div>
-                        <div className="text-sm text-muted-foreground">Advanced text-to-image</div>
-                      </button>
-                      <button
-                        onClick={() => setSelectedGenModel('seedream-4')}
-                        className={`p-4 border rounded-lg text-left transition-colors ${
-                          selectedGenModel === 'seedream-4'
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="font-medium text-foreground">SeedReam-4</div>
-                        <div className="text-sm text-muted-foreground">High-quality detailed results</div>
-                      </button>
-                    </div>
-                    
-                    {selectedGenModel === 'img-bo' && (
-                      <div className="space-y-4">
-                        <div>
-                          <Label className="block text-sm font-medium text-foreground mb-2">Image Size</Label>
-                          <Select value={imageSize} onValueChange={setImageSize}>
-                            <SelectTrigger className="w-full p-3 bg-background border border-border rounded-lg text-foreground">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1024x1024">1024x1024 (Square)</SelectItem>
-                              <SelectItem value="1792x1024">1792x1024 (Landscape)</SelectItem>
-                              <SelectItem value="1024x1792">1024x1792 (Portrait)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    )}
-
-                    <Textarea
-                      value={imageGenPrompt}
-                      onChange={(e) => setImageGenPrompt(e.target.value)}
-                      placeholder="Describe the image you want to generate..."
-                      className="w-full p-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground resize-none"
-                      rows={3}
+                {/* Conditional Image Upload based on model */}
+                {(['gemini', 'gpt'].includes(imgGenerationData.model)) && (
+                  <div>
+                    <Label className="text-foreground">Edit Existing Image (Optional)</Label>
+                    <p className="text-sm text-muted-foreground mb-3">Upload an image to edit it based on your prompt, or leave empty to generate a new image.</p>
+                    <ImageUpload
+                      label="Upload Image to Edit"
+                      placeholder="Select an image to edit with AI"
+                      onUploadComplete={(url) => setImgGenerationData(prev => ({ ...prev, editImageUrl: url }))}
+                      currentUrl={imgGenerationData.editImageUrl}
+                      onUrlChange={(url) => setImgGenerationData(prev => ({ ...prev, editImageUrl: url }))}
+                      showUrlInput={true}
                     />
-                    <Button
-                      onClick={handleImageGeneration}
-                      disabled={!imageGenPrompt.trim() || isLoading}
-                      className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {isLoading ? 'Generating...' : `Generate with ${selectedGenModel.toUpperCase()}`}
-                    </Button>
                   </div>
                 )}
 
-                {/* Editing Tab */}
-                {activeImageTab === 'editing' && (
+                {/* Nano Banana Section with Tabs */}
+                {imgGenerationData.model === 'nano-banana' && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <button
-                        onClick={() => setSelectedEditModel('gpt-imager')}
-                        className={`p-4 border rounded-lg text-left transition-colors ${
-                          selectedEditModel === 'gpt-imager'
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="font-medium text-foreground">GPT-Imager Edit</div>
-                        <div className="text-sm text-muted-foreground">Single image editing</div>
-                      </button>
-                      <button
-                        onClick={() => setSelectedEditModel('seedream-4')}
-                        className={`p-4 border rounded-lg text-left transition-colors ${
-                          selectedEditModel === 'seedream-4'
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="font-medium text-foreground">SeedReam-4 Edit</div>
-                        <div className="text-sm text-muted-foreground">Edit up to 4 images</div>
-                      </button>
-                    </div>
-
-                    <Textarea
-                      value={imageEditPrompt}
-                      onChange={(e) => setImageEditPrompt(e.target.value)}
-                      placeholder="Describe how you want to edit the image(s)..."
-                      className="w-full p-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground resize-none"
-                      rows={3}
-                    />
-                    <ImageUpload 
-                      onUploadComplete={(url) => handleImageEditUpload([url])}
-                      label={`Upload Image${selectedEditModel === 'seedream-4' ? 's (up to 4)' : ''}`}
-                      placeholder="Select image(s) to edit"
-                    />
-                    {uploadedEditImages.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                        {uploadedEditImages.map((image, index) => (
-                          <div key={index} className="relative">
-                            <img 
-                              src={image} 
-                              alt={`Edit ${index + 1}`} 
-                              className="w-full h-20 object-cover rounded-lg border border-border"
-                            />
-                            <button
-                              onClick={() => removeEditImage(index)}
-                              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-destructive/90"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <Button
-                      onClick={handleImageEditing}
-                      disabled={!imageEditPrompt.trim() || uploadedEditImages.length === 0 || isLoading}
-                      className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {isLoading ? 'Processing...' : `Edit with ${selectedEditModel.toUpperCase()}`}
-                    </Button>
-                  </div>
-                )}
-
-                {/* Enhancement Tab */}
-                {activeImageTab === 'enhance' && (
-                  <div className="space-y-4">
-                    <div className="text-center p-6 border-2 border-dashed border-border rounded-lg">
-                      <div className="text-4xl mb-2">✨</div>
-                      <div className="text-lg font-medium text-foreground mb-2">AI Quality Enhancement</div>
-                      <div className="text-sm text-muted-foreground mb-4">
-                        Enhance image quality up to 8K resolution with AI
-                      </div>
-                      <ImageUpload 
-                        onUploadComplete={(url) => handleEnhanceImageUpload([url])}
-                        label="Upload Image to Enhance"
-                        placeholder="Select image to enhance quality"
-                      />
-                    </div>
-                    
-                    {uploadedEnhanceImage && (
-                      <div className="space-y-4">
-                        <div className="flex justify-center">
-                          <img 
-                            src={uploadedEnhanceImage} 
-                            alt="Image to enhance" 
-                            className="max-w-full h-48 object-contain rounded-lg border border-border"
-                          />
-                        </div>
-                        <Button
-                          onClick={handleImageEnhancement}
-                          disabled={isLoading}
-                          className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    {/* Nano Banana Mode Tabs */}
+                    <Tabs value={nanoBananaMode} onValueChange={(value) => setNanoBananaMode(value as 'generate' | 'edit')}>
+                      <TabsList className="grid w-full grid-cols-2 bg-slate-800/50 border border-slate-700">
+                        <TabsTrigger 
+                          value="generate" 
+                          className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-300"
                         >
-                          {isLoading ? 'Enhancing...' : 'Enhance Quality'}
-                        </Button>
-                      </div>
-                    )}
+                          Image Generation
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="edit" 
+                          className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-300"
+                        >
+                          Image Edit
+                        </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="generate" className="space-y-3 mt-4">
+                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border border-slate-700">
+                          <ImageIcon className="h-12 w-12 mx-auto mb-2 text-slate-400" />
+                          <h3 className="font-medium text-white mb-1">Text to Image Generation</h3>
+                          <p className="text-sm text-slate-400">Generate images from text description only</p>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="edit" className="space-y-3 mt-4">
+                        <div className="space-y-4">
+                          <div className="text-center p-4 bg-slate-800/30 rounded-lg border border-slate-700">
+                            <Edit className="h-12 w-12 mx-auto mb-2 text-slate-400" />
+                            <h3 className="font-medium text-white mb-1">Image Editing & Merging</h3>
+                            <p className="text-sm text-slate-400">Upload images to edit or merge them based on your prompt</p>
+                          </div>
+                          
+                          <Label className="text-white">Upload Images to Edit/Merge (Up to 10)</Label>
+                          <p className="text-sm text-slate-400 mb-3">Upload multiple images that will be edited or merged together based on your prompt.</p>
+                          <div className="space-y-3">
+                            {Array.from({ length: Math.max(1, imgGenerationData.multipleImageUrls.length + 1) }).map((_, index) => (
+                              <div key={index} className="relative">
+                                <ImageUpload
+                                  label={`Image ${index + 1}${index === 0 ? ' (Required)' : ' (Optional)'}`}
+                                  placeholder={`Select image ${index + 1} to edit/merge`}
+                                  onUploadComplete={(url) => {
+                                    setImgGenerationData(prev => {
+                                      const newUrls = [...prev.multipleImageUrls];
+                                      newUrls[index] = url;
+                                      return { ...prev, multipleImageUrls: newUrls.filter(Boolean) };
+                                    });
+                                  }}
+                                  currentUrl={imgGenerationData.multipleImageUrls[index] || ""}
+                                  onUrlChange={(url) => {
+                                    setImgGenerationData(prev => {
+                                      const newUrls = [...prev.multipleImageUrls];
+                                      if (url) {
+                                        newUrls[index] = url;
+                                      } else {
+                                        newUrls.splice(index, 1);
+                                      }
+                                      return { ...prev, multipleImageUrls: newUrls.filter(Boolean) };
+                                    });
+                                  }}
+                                  showUrlInput={true}
+                                  className="relative"
+                                />
+                                {imgGenerationData.multipleImageUrls.length > 0 && index < imgGenerationData.multipleImageUrls.length && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="absolute top-8 right-2 h-8 w-8 p-0 bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700"
+                                    onClick={() => {
+                                      setImgGenerationData(prev => {
+                                        const newUrls = [...prev.multipleImageUrls];
+                                        newUrls.splice(index, 1);
+                                        return { ...prev, multipleImageUrls: newUrls };
+                                      });
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 )}
+
+                {imgGenerationData.imageUrl && (
+                  <div>
+                    <Label className="text-foreground">Generated Image</Label>
+                    <div className="bg-gradient-to-br from-purple-500/5 to-pink-500/10 p-6 rounded-xl border border-border space-y-4">
+                      <div className="text-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-600 rounded-full border border-green-500/20">
+                          <ImageIcon className="w-4 h-4" />
+                          <span className="text-sm font-medium">Image Generated Successfully!</span>
+                        </div>
+                      </div>
+                      
+                      <div className="relative group max-w-md mx-auto">
+                        <img 
+                          src={imgGenerationData.imageUrl} 
+                          alt="Generated image"
+                          className="w-full h-auto object-contain rounded-xl shadow-2xl border-2 border-primary/20 animate-fade-in"
+                        />
+                        
+                        <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="h-8 w-8 p-0 bg-black/80 hover:bg-black/90 text-white shadow-lg backdrop-blur-sm"
+                            onClick={() => window.open(imgGenerationData.imageUrl, '_blank')}
+                            title="View full size"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="h-8 w-8 p-0 bg-black/80 hover:bg-black/90 text-white shadow-lg backdrop-blur-sm"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = imgGenerationData.imageUrl;
+                              link.download = 'generated-image.png';
+                              link.target = '_blank';
+                              link.click();
+                            }}
+                            title="Download image"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  onClick={async () => {
+                    if (!checkEmailVerification()) return;
+                    
+                    if (!imgGenerationData.prompt.trim()) {
+                      toast({
+                        title: "Missing prompt",
+                        description: "Please enter a prompt for image generation.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+
+                    setIsLoading(true);
+                    try {
+                      let imageUrl: string;
+                      const editImageUrl = imgGenerationData.editImageUrl;
+
+                      switch (imgGenerationData.model) {
+                        case 'gemini':
+                          imageUrl = await imageService.generateWithGemini(imgGenerationData.prompt, editImageUrl);
+                          break;
+                        case 'gpt':
+                          imageUrl = await imageService.generateWithGPT(imgGenerationData.prompt, editImageUrl);
+                          break;
+                        case 'nano-banana':
+                          if (nanoBananaMode === 'edit') {
+                            if (imgGenerationData.multipleImageUrls.length === 0) {
+                              toast({
+                                title: "No images to edit",
+                                description: "Please upload at least one image to edit with Nano Banana.",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            imageUrl = await imageService.mergeImages(imgGenerationData.prompt, imgGenerationData.multipleImageUrls);
+                          } else {
+                            // Generate mode - no images needed, just text
+                            imageUrl = await imageService.mergeImages(imgGenerationData.prompt, []);
+                          }
+                          break;
+                        case 'flux-pro':
+                          imageUrl = await imageService.generateWithFluxPro(imgGenerationData.prompt);
+                          break;
+                        case 'img-cv':
+                          imageUrl = await imageService.generateWithImgCV(imgGenerationData.prompt);
+                          break;
+                        default:
+                          throw new Error('Invalid model selected');
+                      }
+                      
+                      setImgGenerationData(prev => ({ ...prev, imageUrl }));
+                      toast({
+                        title: "Image generated successfully!",
+                        description: imgGenerationData.model === 'nano-banana' 
+                          ? (nanoBananaMode === 'edit' ? "Your images have been edited/merged successfully!" : "Your image has been generated successfully!")
+                          : editImageUrl 
+                            ? "Your image has been edited." 
+                            : "Your image has been created.",
+                      });
+                    } catch (error: any) {
+                      console.error("Image generation error:", error);
+                      toast({
+                        title: "Error generating image",
+                        description: error.message || "Failed to generate image. Please try again.",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  disabled={isLoading || !imgGenerationData.prompt.trim()}
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {isLoading ? (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                      {imgGenerationData.editImageUrl ? 'Editing Image...' : 'Generating Image...'}
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="w-4 h-4 mr-2" />
+                      {imgGenerationData.editImageUrl ? 'Edit Image' : 'Generate Image'}
+                    </>
+                  )}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
